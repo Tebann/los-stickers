@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { ArrowRightLeft, DollarSign } from 'lucide-react'
+import { ArrowRightLeft, DollarSign, Moon, Sun } from 'lucide-react'
 import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, setDoc, writeBatch } from 'firebase/firestore'
 import { db, isFirebaseReady } from './firebase'
 import './App.css'
@@ -10,6 +10,7 @@ const STORAGE_KEY = 'stickers_history_react_v1'
 const STICKER_PRICE = 2000
 const TEBAN_SHARE = 1000
 const FIRESTORE_HISTORY_COLLECTION = 'stickers_history'
+const THEME_STORAGE_KEY = 'stickers_theme'
 const BASE_URL = import.meta.env.BASE_URL
 const assetPath = (fileName) => `${BASE_URL}${fileName}`
 const SEED_HISTORY = [
@@ -162,6 +163,11 @@ const drawMetricCard = (doc, x, y, w, h, label, value, accent, fill) => {
 }
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+    if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme
+    return 'dark'
+  })
   const [history, setHistory] = useState(loadHistory)
   const [billingMonth, setBillingMonth] = useState(todayISO().slice(0, 7))
   const [isExportModalOpen, setIsExportModalOpen] = useState(false)
@@ -187,6 +193,11 @@ function App() {
     setHistory(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next.map(toStoredRow)))
   }
+
+  useEffect(() => {
+    document.body.classList.toggle('theme-dark', theme === 'dark')
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
 
   useEffect(() => {
     if (!isFirebaseReady || !db) return
@@ -540,6 +551,10 @@ function App() {
       aBreb: 0,
     })
 
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
   return (
     <>
       <main className="app-shell">
@@ -549,6 +564,22 @@ function App() {
             <div>
               <p className="brand-title">Registro de Stickers</p>
             </div>
+          </div>
+
+          <div className="topbar-actions">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'}
+              title={theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}
+            >
+              {theme === 'dark' ? (
+                <Sun size={18} className="theme-icon" aria-hidden="true" />
+              ) : (
+                <Moon size={18} className="theme-icon" aria-hidden="true" />
+              )}
+            </button>
           </div>
         </header>
 

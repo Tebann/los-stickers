@@ -12,6 +12,16 @@
   --shadow: 0 6px 20px #4f5d7420;
 }
 
+body.theme-dark {
+  --bg: #000000;
+  --surface: #06090f;
+  --module: #090d14;
+  --line: #1b2433;
+  --text: #ebf1fb;
+  --muted: #93a6c2;
+  --shadow: 0 12px 28px #00000066;
+}
+
 .app-shell {
   position: relative;
   width: min(1180px, 96vw);
@@ -34,8 +44,14 @@
   padding: 0.25rem 0.1rem 0.5rem;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 1rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .brand {
@@ -57,7 +73,30 @@
   font-weight: 800;
   letter-spacing: 0.1px;
   font-size: 1.7rem;
-  color: #000000;
+  color: var(--text);
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #c7d5e8;
+  background: #f2f6fc;
+  padding: 0;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.theme-icon {
+  color: #2e60de;
+  transition: color 0.2s ease;
 }
 
 .btn {
@@ -115,6 +154,26 @@
   border-color: #5374df;
   background: #e8efff;
   color: #1d3f85;
+}
+
+body,
+.panel,
+.kpi-card,
+.switch-btn,
+.btn,
+.chip,
+.person-group,
+.sale-btn,
+.today-box,
+.table-wrap,
+.export-modal,
+.billing-row,
+.billing-input,
+.delete-btn,
+.empty-state,
+.rules-panel,
+.result-pill {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .single-view {
@@ -723,6 +782,10 @@ tbody tr:nth-child(even) {
     align-items: stretch;
   }
 
+  .topbar-actions {
+    justify-content: flex-end;
+  }
+
   .kpi-grid {
     grid-template-columns: 1fr;
   }
@@ -746,4 +809,185 @@ tbody tr:nth-child(even) {
   .live-groups {
     grid-template-columns: 1fr;
   }
+}
+
+body.theme-dark .switch-btn {
+  border-color: #243245;
+  background: #090b10;
+  color: #d3d9e4;
+}
+
+body.theme-dark .topbar,
+body.theme-dark .view-switch,
+body.theme-dark .panel,
+body.theme-dark .kpi-card {
+  box-shadow: 0 12px 30px #00000085;
+}
+
+body.theme-dark .switch-btn.active {
+  border-color: #2f4678;
+  background: #0f1726;
+  color: #f2f6ff;
+}
+
+body.theme-dark .btn.ghost {
+  background: #090c12;
+  border-color: #2a313d;
+  color: #dfe5ef;
+}
+
+body.theme-dark .chip,
+body.theme-dark .today-box,
+body.theme-dark .person-group,
+body.theme-dark .rules-panel,
+body.theme-dark .billing-row,
+body.theme-dark .field input,
+body.theme-dark .table-wrap,
+body.theme-dark .export-modal,
+body.theme-dark .empty-state {
+  background: #090b10;
+  border-color: #272d38;
+  color: #d9e0ea;
+}
+
+body.theme-dark .panel,
+body.theme-dark .kpi-card {
+  background: #07090d;
+  border-color: #202632;
+}
+
+body.theme-dark .kpi-favor {
+  background: #091611;
+  border-color: #224738;
+}
+
+body.theme-dark .kpi-contra {
+  background: #180d12;
+  border-color: #5b2b3b;
+}
+
+body.theme-dark .kpi-balance {
+  background: #0a0d13;
+  border-color: #2b3340;
+}
+
+body.theme-dark .kpi-value,
+body.theme-dark .kpi-value.small {
+  color: #e8f0ff;
+}
+
+body.theme-dark .kpi-label,
+body.theme-dark .kpi-meta,
+body.theme-dark .group-title,
+body.theme-dark .today-title,
+body.theme-dark .today-line,
+body.theme-dark .field span,
+body.theme-dark .rules-title,
+body.theme-dark .rules-panel p,
+body.theme-dark .export-option,
+body.theme-dark .export-option small,
+body.theme-dark .billing-label,
+body.theme-dark .panel-head h3,
+body.theme-dark .brand-title,
+body.theme-dark .today-total,
+body.theme-dark .block-title {
+  color: #e1ebf9;
+}
+
+body.theme-dark .sale-btn {
+  color: #e7effc;
+}
+
+body.theme-dark .sale-cash-teban {
+  background: #0d1814;
+  border-color: #2b5146;
+}
+
+body.theme-dark .sale-cash-aleja {
+  background: #0d121a;
+  border-color: #364459;
+}
+
+body.theme-dark .sale-breb-teban {
+  background: #14121b;
+  border-color: #3d3552;
+}
+
+body.theme-dark .sale-breb-aleja {
+  background: #181017;
+  border-color: #5a3345;
+}
+
+body.theme-dark thead th {
+  background: #141922;
+  color: #e6ecf6;
+  border-bottom-color: #2b3341;
+}
+
+body.theme-dark tbody td {
+  color: #dee8f7;
+  border-bottom-color: #22344c;
+}
+
+body.theme-dark tbody tr:nth-child(odd) {
+  background: #090d14;
+}
+
+body.theme-dark tbody tr:nth-child(even) {
+  background: #070b11;
+}
+
+body.theme-dark .delete-btn {
+  background: #361f2a;
+  border-color: #81415d;
+  color: #f2bfd2;
+}
+
+body.theme-dark .delete-btn:hover {
+  background: #472536;
+}
+
+body.theme-dark .export-option {
+  background: #0a0e15;
+  border-color: #2b3340;
+  color: #dde4ef;
+}
+
+body.theme-dark .export-option.active {
+  background: #111827;
+  border-color: #44506a;
+}
+
+body.theme-dark .icon-close {
+  background: #0d121b;
+  border-color: #2a3341;
+  color: #d8dfec;
+}
+
+body.theme-dark .theme-toggle {
+  background: #080b11;
+  border-color: #2a3240;
+  box-shadow: 0 8px 18px #00000066;
+}
+
+body.theme-dark .theme-icon {
+  color: #9ab6ff;
+}
+
+body.theme-dark .result-positive {
+  color: #8ce0be;
+  background: #12382f;
+  border-color: #2f846b;
+}
+
+body.theme-dark .result-negative {
+  color: #f0b4c8;
+  background: #3b1b2a;
+  border-color: #8b3f5d;
+}
+
+body.theme-dark .result-neutral {
+  color: #b8ceff;
+  background: #17294a;
+  border-color: #4265a8;
 }

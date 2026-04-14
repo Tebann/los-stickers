@@ -14,7 +14,7 @@ body,
 body {
   font-family: 'Space Grotesk', sans-serif;
   color: #1f3554;
-  background: #dfe5ee;
+  background: var(--bg);
 }
 
 p,
