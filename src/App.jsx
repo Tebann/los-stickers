@@ -7,6 +7,8 @@ import './App.css'
 const STORAGE_KEY = 'stickers_history_react_v1'
 const STICKER_PRICE = 2000
 const TEBAN_SHARE = 1000
+const BASE_URL = import.meta.env.BASE_URL
+const assetPath = (fileName) => `${BASE_URL}${fileName}`
 const SEED_HISTORY = [
   { id: 'seed-2026-03-28', date: '2026-03-28', tEfe: 13, aEfe: 14, tBreb: 3, aBreb: 0 },
   { id: 'seed-2026-03-29', date: '2026-03-29', tEfe: 1, aEfe: 3, tBreb: 0, aBreb: 2 },
@@ -224,7 +226,7 @@ function App() {
     const ordered = [...history].sort((a, b) => String(a.date).localeCompare(String(b.date)))
     const doc = new jsPDF({ unit: 'pt', format: 'a4' })
     const createdAt = new Date().toLocaleString('es-CO')
-    const logoDataUrl = await loadImageDataUrl('/logo.png').catch(() => null)
+    const logoDataUrl = await loadImageDataUrl(assetPath('logo.png')).catch(() => null)
     const startDate = ordered[0]?.date ?? ''
     const endDate = ordered[ordered.length - 1]?.date ?? ''
     const methodTotals = ordered.reduce(
@@ -349,7 +351,7 @@ function App() {
       month: 'long',
       year: 'numeric',
     })
-    const signatureDataUrl = await loadImageDataUrl('/Firma%20Esteban.png').catch(() => null)
+    const signatureDataUrl = await loadImageDataUrl(assetPath('Firma%20Esteban.png')).catch(() => null)
     const companyName = 'INDUSTRIAS GATO GORDO SAS'
     const companyNit = 'NIT 901.903.584-3'
     const beneficiaryName = 'ESTEBAN SANCHEZ CARDONA'
@@ -450,7 +452,7 @@ function App() {
       <main className="app-shell">
         <header className="topbar reveal">
           <div className="brand">
-            <img src="/logo.png" alt="Logo" className="brand-logo" />
+            <img src={assetPath('logo.png')} alt="Logo" className="brand-logo" />
             <div>
               <p className="brand-title">Registro de Stickers</p>
             </div>
