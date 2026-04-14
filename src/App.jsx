@@ -7,6 +7,15 @@ import './App.css'
 const STORAGE_KEY = 'stickers_history_react_v1'
 const STICKER_PRICE = 2000
 const TEBAN_SHARE = 1000
+const SEED_HISTORY = [
+  { id: 'seed-2026-03-28', date: '2026-03-28', tEfe: 13, aEfe: 14, tBreb: 3, aBreb: 0 },
+  { id: 'seed-2026-03-29', date: '2026-03-29', tEfe: 1, aEfe: 3, tBreb: 0, aBreb: 2 },
+  { id: 'seed-2026-04-03', date: '2026-04-03', tEfe: 0, aEfe: 3, tBreb: 0, aBreb: 3 },
+  { id: 'seed-2026-04-04', date: '2026-04-04', tEfe: 4, aEfe: 4, tBreb: 0, aBreb: 0 },
+  { id: 'seed-2026-04-09', date: '2026-04-09', tEfe: 3, aEfe: 2, tBreb: 0, aBreb: 0 },
+  { id: 'seed-2026-04-10', date: '2026-04-10', tEfe: 1, aEfe: 0, tBreb: 0, aBreb: 0 },
+  { id: 'seed-2026-04-11', date: '2026-04-11', tEfe: 1, aEfe: 0, tBreb: 1, aBreb: 0 },
+]
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
@@ -30,14 +39,42 @@ const formatCurrency = (value) =>
     minimumFractionDigits: 0,
   }).format(value)
 
+const calcHistoryRow = (row) => {
+  const tEfe = safeInt(row.tEfe)
+  const aEfe = safeInt(row.aEfe)
+  const tBreb = safeInt(row.tBreb)
+  const aBreb = safeInt(row.aBreb)
+
+  const alejaMeDebe = tEfe * TEBAN_SHARE
+  const yoLeDebo = tBreb * TEBAN_SHARE + aBreb * STICKER_PRICE
+  const balance = alejaMeDebe - yoLeDebo
+  const totalStickers = tEfe + aEfe + tBreb + aBreb
+
+  return {
+    ...row,
+    tEfe,
+    aEfe,
+    tBreb,
+    aBreb,
+    alejaMeDebe,
+    yoLeDebo,
+    balance,
+    totalStickers,
+  }
+}
+
+const sortHistoryRows = (rows) => [...rows].sort((a, b) => String(b.date).localeCompare(String(a.date)))
+
 const loadHistory = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    const parsed = raw ? JSON.parse(raw) : []
+    const stored = Array.isArray(parsed) ? parsed.map(calcHistoryRow) : []
+    const datesInStorage = new Set(stored.map((row) => row.date))
+    const missingSeed = SEED_HISTORY.filter((row) => !datesInStorage.has(row.date)).map(calcHistoryRow)
+    return sortHistoryRows([...stored, ...missingSeed])
   } catch {
-    return []
+    return sortHistoryRows(SEED_HISTORY.map(calcHistoryRow))
   }
 }
 
@@ -132,31 +169,9 @@ function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   }
 
-  const calcRow = (row) => {
-    const tEfe = safeInt(row.tEfe)
-    const aEfe = safeInt(row.aEfe)
-    const tBreb = safeInt(row.tBreb)
-    const aBreb = safeInt(row.aBreb)
+  const calcRow = calcHistoryRow
 
-    const alejaMeDebe = tEfe * TEBAN_SHARE
-    const yoLeDebo = tBreb * TEBAN_SHARE + aBreb * STICKER_PRICE
-    const balance = alejaMeDebe - yoLeDebo
-    const totalStickers = tEfe + aEfe + tBreb + aBreb
-
-    return {
-      ...row,
-      tEfe,
-      aEfe,
-      tBreb,
-      aBreb,
-      alejaMeDebe,
-      yoLeDebo,
-      balance,
-      totalStickers,
-    }
-  }
-
-  const sortHistory = (rows) => [...rows].sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  const sortHistory = sortHistoryRows
 
   const registerSale = (field) => {
     const today = todayISO()
