@@ -195,6 +195,7 @@ function App() {
   }
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme
     document.body.classList.toggle('theme-dark', theme === 'dark')
     localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme])
@@ -560,7 +561,7 @@ function App() {
       <main className="app-shell">
         <header className="topbar reveal">
           <div className="brand">
-            <img src={assetPath('logo.png')} alt="Logo" className="brand-logo" />
+            <img src={assetPath('logo.png')} alt="Logo" className="lobito-logo-sticker brand-logo w-20 h-20 object-contain" />
             <div>
               <p className="brand-title">Registro de Stickers</p>
             </div>

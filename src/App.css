@@ -61,8 +61,8 @@ body.theme-dark {
 }
 
 .brand-logo {
-  width: 58px;
-  height: 58px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
   flex-shrink: 0;
 }

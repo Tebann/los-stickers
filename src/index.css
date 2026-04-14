@@ -23,3 +23,34 @@ h2,
 h3 {
   margin: 0;
 }
+
+.lobito-logo-sticker {
+background: transparent;
+border-radius: 0;
+padding: 0;
+}
+
+.brand-logo {
+display: block;
+object-position: center;
+transform: translateY(1px);
+}
+
+/* Reborde solo en modo oscuro */
+:root[data-theme="dark"] .lobito-logo-sticker {
+filter:
+drop-shadow(1px 0 0 #ffffff)
+drop-shadow(-1px 0 0 #ffffff)
+drop-shadow(0 1px 0 #ffffff)
+drop-shadow(0 -1px 0 #ffffff);
+}
+
+/* Si lo quieres en ambos temas (claro y oscuro), usa esto en vez de lo de arriba:
+.lobito-logo-sticker {
+filter:
+drop-shadow(1px 0 0 #ffffff)
+drop-shadow(-1px 0 0 #ffffff)
+drop-shadow(0 1px 0 #ffffff)
+drop-shadow(0 -1px 0 #ffffff);
+}
+*/
