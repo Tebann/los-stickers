@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { ArrowRightLeft, DollarSign } from 'lucide-react'
+import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, setDoc, writeBatch } from 'firebase/firestore'
+import { db, isFirebaseReady } from './firebase'
 import './App.css'
 
 const STORAGE_KEY = 'stickers_history_react_v1'
 const STICKER_PRICE = 2000
 const TEBAN_SHARE = 1000
+const FIRESTORE_HISTORY_COLLECTION = 'stickers_history'
 const BASE_URL = import.meta.env.BASE_URL
 const assetPath = (fileName) => `${BASE_URL}${fileName}`
 const SEED_HISTORY = [
@@ -41,6 +44,15 @@ const formatCurrency = (value) =>
     minimumFractionDigits: 0,
   }).format(value)
 
+const toStoredRow = (row) => ({
+  id: row.id,
+  date: row.date,
+  tEfe: safeInt(row.tEfe),
+  aEfe: safeInt(row.aEfe),
+  tBreb: safeInt(row.tBreb),
+  aBreb: safeInt(row.aBreb),
+})
+
 const calcHistoryRow = (row) => {
   const tEfe = safeInt(row.tEfe)
   const aEfe = safeInt(row.aEfe)
@@ -67,16 +79,21 @@ const calcHistoryRow = (row) => {
 
 const sortHistoryRows = (rows) => [...rows].sort((a, b) => String(b.date).localeCompare(String(a.date)))
 
+const mergeWithSeedRows = (rows) => {
+  const normalized = sortHistoryRows(rows.map(calcHistoryRow))
+  const datesInRows = new Set(normalized.map((row) => row.date))
+  const missingSeed = SEED_HISTORY.filter((row) => !datesInRows.has(row.date)).map(calcHistoryRow)
+  return sortHistoryRows([...normalized, ...missingSeed])
+}
+
 const loadHistory = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
-    const stored = Array.isArray(parsed) ? parsed.map(calcHistoryRow) : []
-    const datesInStorage = new Set(stored.map((row) => row.date))
-    const missingSeed = SEED_HISTORY.filter((row) => !datesInStorage.has(row.date)).map(calcHistoryRow)
-    return sortHistoryRows([...stored, ...missingSeed])
+    const stored = Array.isArray(parsed) ? parsed : []
+    return mergeWithSeedRows(stored)
   } catch {
-    return sortHistoryRows(SEED_HISTORY.map(calcHistoryRow))
+    return mergeWithSeedRows([])
   }
 }
 
@@ -168,8 +185,46 @@ function App() {
 
   const persist = (next) => {
     setHistory(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next.map(toStoredRow)))
   }
+
+  useEffect(() => {
+    if (!isFirebaseReady || !db) return
+
+    const historyCollection = collection(db, FIRESTORE_HISTORY_COLLECTION)
+    let unsubscribe = () => {}
+    let isActive = true
+
+    const startSync = async () => {
+      try {
+        const snapshot = await getDocs(historyCollection)
+
+        if (snapshot.empty) {
+          const seedBatch = writeBatch(db)
+          for (const seedRow of SEED_HISTORY) {
+            seedBatch.set(doc(historyCollection, seedRow.id), toStoredRow(seedRow))
+          }
+          await seedBatch.commit()
+        }
+
+        unsubscribe = onSnapshot(query(historyCollection, orderBy('date', 'desc')), (liveSnapshot) => {
+          if (!isActive) return
+          const remoteRows = liveSnapshot.docs.map((item) => calcHistoryRow({ id: item.id, ...item.data() }))
+          setHistory(remoteRows)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteRows.map(toStoredRow)))
+        })
+      } catch (error) {
+        console.error('No se pudo sincronizar con Firebase', error)
+      }
+    }
+
+    void startSync()
+
+    return () => {
+      isActive = false
+      unsubscribe()
+    }
+  }, [])
 
   const calcRow = calcHistoryRow
 
@@ -177,13 +232,16 @@ function App() {
 
   const registerSale = (field) => {
     const today = todayISO()
+    const historyCollection = isFirebaseReady && db ? collection(db, FIRESTORE_HISTORY_COLLECTION) : null
     let found = false
+    let changedRow = null
 
     const updated = history.map((row) => {
       if (row.date !== today) return row
       found = true
       const nextValue = safeInt(row[field]) + 1
-      return calcRow({ ...row, [field]: nextValue })
+      changedRow = calcRow({ ...row, [field]: nextValue })
+      return changedRow
     })
 
     if (!found) {
@@ -197,10 +255,23 @@ function App() {
       })
       const newRow = calcRow({ ...base, [field]: 1 })
       persist(sortHistory([newRow, ...history]))
+
+      if (historyCollection) {
+        void setDoc(doc(historyCollection, newRow.id), toStoredRow(newRow)).catch((error) => {
+          console.error('No se pudo guardar en Firebase', error)
+        })
+      }
+
       return
     }
 
     persist(sortHistory(updated))
+
+    if (changedRow && historyCollection) {
+      void setDoc(doc(historyCollection, changedRow.id), toStoredRow(changedRow)).catch((error) => {
+        console.error('No se pudo guardar en Firebase', error)
+      })
+    }
   }
 
   const deleteRow = (id) => {
@@ -208,13 +279,35 @@ function App() {
     if (!ok) return
 
     persist(history.filter((row) => row.id !== id))
+
+    if (isFirebaseReady && db) {
+      const historyCollection = collection(db, FIRESTORE_HISTORY_COLLECTION)
+      void deleteDoc(doc(historyCollection, id)).catch((error) => {
+        console.error('No se pudo eliminar en Firebase', error)
+      })
+    }
   }
 
   const clearAll = () => {
     if (!history.length) return
     const ok = window.confirm('Se eliminara todo el historial de forma permanente. Continuar?')
     if (!ok) return
+
+    const rowsToDelete = [...history]
     persist([])
+
+    if (isFirebaseReady && db) {
+      const historyCollection = collection(db, FIRESTORE_HISTORY_COLLECTION)
+      const deleteBatch = writeBatch(db)
+
+      for (const row of rowsToDelete) {
+        deleteBatch.delete(doc(historyCollection, row.id))
+      }
+
+      void deleteBatch.commit().catch((error) => {
+        console.error('No se pudo limpiar en Firebase', error)
+      })
+    }
   }
 
   const exportHistoryPdf = async () => {
